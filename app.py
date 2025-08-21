@@ -1,4 +1,9 @@
 import base64
+from flask import make_response, send_file, url_for
+from PIL import Image, ImageDraw, ImageFont
+import qrcode
+import io
+from openpyxl import load_workbook
 import smtplib
 import qrcode
 import io
@@ -235,8 +240,8 @@ def load_employees():
         return False
 
 # Load employees when the app starts
-if not load_employees():
-    print("Warning: Could not load employee data. Please check the Excel file.")
+# if not load_employees():
+#     print("Warning: Could not load employee data. Please check the Excel file.")
 
 @app.route('/')
 def index():
@@ -540,6 +545,7 @@ def employee_profile(employee_id):
         if response.status_code != 200:
             return "Employee not found", 404
         employee = response.get_json()
+        employee['id'] = employee_id
         return render_template('employee_profile.html', employee=employee)
     except Exception as e:
         return str(e), 500
@@ -551,6 +557,77 @@ def health_check():
         'firebase_initialized': db is not None
     })
 
+@app.route('/employee/<employee_id>/business_card')
+def generate_business_card(employee_id):
+    app.logger.info(f"Generating business card for employee_id: {employee_id}")
+    try:
+        response = get_employee_data(employee_id)
+        if response.status_code != 200:
+            app.logger.warning(f"Employee with id {employee_id} not found for business card generation.")
+            return "Employee not found", 404
+        
+        employee_data = response.get_json()
+
+        # --- PNG Business Card Generation ---
+        card_width, card_height = 400, 250
+        padding = 20
+        bg_color = (255, 255, 255)
+        text_color = (0, 0, 0)
+        img = Image.new('RGB', (card_width, card_height), color=bg_color)
+        draw = ImageDraw.Draw(img)
+
+        try:
+            # Try common sans-serif fonts
+            title_font = ImageFont.truetype("Helvetica.ttf", 20)
+            details_font = ImageFont.truetype("Helvetica.ttf", 14)
+        except IOError:
+            try:
+                title_font = ImageFont.truetype("Arial.ttf", 20)
+                details_font = ImageFont.truetype("Arial.ttf", 14)
+            except IOError:
+                # Fallback to default font
+                title_font = ImageFont.load_default()
+                details_font = ImageFont.load_default()
+
+        # Employee Details
+        y_position = padding
+        if employee_data.get('name'):
+            draw.text((padding, y_position), employee_data.get('name', ''), font=title_font, fill=text_color)
+            y_position += 30
+
+        draw.line((padding, y_position, card_width - 140, y_position), fill='gray', width=1)
+        y_position += 10
+
+        fields_to_display = {
+            'email': 'Email',
+            'phone': 'Phone',
+            'department': 'Department',
+            'company': 'Company'
+        }
+
+        for key, label in fields_to_display.items():
+            if employee_data.get(key):
+                text = f"{label}: {employee_data.get(key)}"
+                draw.text((padding, y_position), text, font=details_font, fill=text_color)
+                y_position += 20
+
+        # QR Code
+        profile_url = url_for('employee_profile', employee_id=employee_id, _external=True)
+        qr_img = qrcode.make(profile_url)
+        qr_img = qr_img.resize((100, 100))
+        img.paste(qr_img, (card_width - 120, card_height - 120))
+
+        # Save image to a byte buffer
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        buf.seek(0)
+
+        filename = f"{employee_data.get('name', 'employee').replace(' ', '_')}_card.png"
+        return send_file(buf, mimetype='image/png', as_attachment=True, download_name=filename)
+
+    except Exception as e:
+        app.logger.error(f"Error generating business card for {employee_id}: {e}", exc_info=True)
+        return str(e), 500
 
 if __name__ == '__main__':
     # Create uploads directory if it doesn't exist

@@ -5,13 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ employee.name }} - Employee Profile</title>
+
+    
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
         .profile-card {
             max-width: 500px;
             margin: 2rem auto;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border-radius: 1rem;
             overflow: hidden;
         }
@@ -126,7 +131,7 @@
         </div>
     </div>
 
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-12">
         <div class="profile-card bg-white">
             <div class="profile-header">
                 {% if employee.image_url %}
@@ -138,36 +143,26 @@
                     {{ employee.name[0]|upper }}
                 </div>
                 {% endif %}
-                <h1 class="text-2xl font-bold">{{ employee.name }}</h1>
+                <h1 class="text-3xl font-bold">{{ employee.name }}</h1>
                 <!-- <p class="text-blue-100">{{ employee.designation }}</p> -->
                 <!-- <p class="text-sm text-blue-50 mt-2">{{ employee.position }}</p> -->
                 <p class="text-sm text-blue-50 mt-2">{{ employee.department }}</p>
-                <p class="text-blue-100">{{ employee.position }}</p>
+                <p class="text-indigo-200 text-lg">{{ employee.position }}</p>
             </div>
 
-            <!-- <div class="mt-4">
-                {% if employee.company and employee.company|lower == 'yubi' %}
-                    <a href="https://www.yubi.co/" target="_blank" class="inline-block">
-                        <img src="https://www.yubi.co/favicon-32x32.png" 
-                             alt="Yubi Logo" 
-                             class="h-10 w-auto mx-auto"
-                             onerror="this.src='https://via.placeholder.com/150?text=YUBI'">
-                    </a>
-                {% elif employee.company and employee.company|lower == 'spocto' %}
-                    <a href="https://www.spocto.com/" target="_blank" class="inline-block">
-                        <img src="https://www.spocto.com/favicon.ico" 
-                             alt="Spocto Logo" 
-                             class="h-10 w-auto mx-auto"
-                             onerror="this.src='https://via.placeholder.com/150?text=SPOCTO'">
-                    </a>
-                {% else %}
-                    <div class="company-logo text-gray-500 text-sm">Company</div>
+            <div class="mt-4 text-center">
+                {% if employee.company_logo_url %}
+                    <img src="{{ employee.company_logo_url }}" 
+                         alt="{{ employee.company }} Logo" 
+                         class="company-logo h-12 w-auto mx-auto">
+                {% elif employee.company %}
+                    <div class="company-logo text-gray-500 text-lg font-semibold">{{ employee.company }}</div>
                 {% endif %}
-            </div> -->
+            </div>
 
-            <div class="p-6">
+            <div class="p-8">
                 <div class="mb-6">
-                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Contact Information</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Contact Information</h2>
                     <div class="space-y-2">
                         {% if employee.email %}
                         <div class="flex items-center text-gray-600">
@@ -186,23 +181,24 @@
                                 <i class="far fa-calendar-alt mr-2"></i> Book a Meeting
                             </button>
                         </div>
+                        <div class="mt-2">
+                            <a href="/employee/{{ employee.id }}/business_card" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                                <i class="fas fa-download mr-2"></i> Download Business Card
+                            </a>
+                        </div>
                     </div>
                 </div>
 
                 {% if employee.linkedin or employee.company_linkedin %}
                 <div class="mb-6">
-                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Connect</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Connect</h2>
                     <div class="social-links flex justify-center">
                         {% if employee.linkedin %}
                         <a href="{{ employee.linkedin }}" target="_blank" title="LinkedIn">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
                         {% endif %}
-                        {% if employee.company_linkedin %}
-                        <a href="{{ employee.company_linkedin }}" target="_blank" title="Company LinkedIn">
-                            <i class="fab fa-linkedin"></i>
-                        </a>
-                        {% endif %}
+
 
 
                         {% if employee.phone %}
@@ -228,7 +224,7 @@
 
                 {% if employee.bio %}
                 <div class="mb-6">
-                    <h2 class="text-lg font-semibold text-gray-700 mb-2">About</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">About</h2>
                     <p class="text-gray-600">{{ employee.bio }}</p>
                 </div>
                 {% endif %}
