@@ -557,14 +557,13 @@ def health_check():
         'firebase_initialized': db is not None
     })
 
-@app.route('/employee/<employee_id>/business_card')
-def generate_business_card(employee_id):
-    app.logger.info(f"Generating business card for employee_id: {employee_id}")
+def _create_business_card_image(employee_id):
+    """Fetches employee data and creates the business card image."""
     try:
         response = get_employee_data(employee_id)
         if response.status_code != 200:
             app.logger.warning(f"Employee with id {employee_id} not found for business card generation.")
-            return "Employee not found", 404
+            return None, None
         
         employee_data = response.get_json()
 
@@ -623,10 +622,26 @@ def generate_business_card(employee_id):
         buf.seek(0)
 
         filename = f"{employee_data.get('name', 'employee').replace(' ', '_')}_card.png"
-        return send_file(buf, mimetype='image/png', as_attachment=True, download_name=filename)
+        return buf, filename
 
     except Exception as e:
-        app.logger.error(f"Error generating business card for {employee_id}: {e}", exc_info=True)
+        app.logger.error(f"Error creating business card image for {employee_id}: {e}", exc_info=True)
+        return None, None
+
+@app.route('/employee/<employee_id>/business_card')
+def generate_business_card(employee_id):
+    app.logger.info(f"Generating business card for employee_id: {employee_id}")
+    try:
+        # Create the business card image
+        buf, filename = _create_business_card_image(employee_id)
+
+        if buf and filename:
+            return send_file(buf, mimetype='image/png', as_attachment=True, download_name=filename)
+        else:
+            return "Employee not found or error generating card", 404
+
+    except Exception as e:
+        app.logger.error(f"Error in generate_business_card route for {employee_id}: {e}", exc_info=True)
         return str(e), 500
 
 if __name__ == '__main__':
