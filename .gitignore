@@ -1,0 +1,119 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# IDE related files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# PyCharm
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# OCS specific
+.ocs_config.json
+
+# Logs
+*.log
+logs/
+log/
+
+# Coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pytest
+.pytest_cache/
+
+# API keys and secrets
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore all local history of files
+.history
+
+# Ignore compiled python modules
+*.pyc
+
+# Virtual environment
+.Python
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+[Ss]cripts
+pyvenv.cfg
+pip-selfcheck.json
+
+# Temporary files
+*~
+*.bak
+*.swp
+
+# MAC OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+
+bkup-devops
+
+
+#Firebase private key
+firebase_private_key.json

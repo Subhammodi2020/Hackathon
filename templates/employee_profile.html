@@ -1,0 +1,352 @@
+<!-- templates/employee_profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ employee.name }} - Employee Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .profile-card {
+            max-width: 500px;
+            margin: 2rem auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        .profile-header {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .profile-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid white;
+            margin: 0 auto 1rem;
+            object-fit: cover;
+        }
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #E5E7EB;
+            color: #4B5563;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        .social-links a:hover {
+            background: #4F46E5;
+            color: white;
+            transform: translateY(-3px);
+        }
+        .company-logo {
+            max-height: 40px;
+            width: auto;
+            transition: transform 0.3s ease;
+        }
+        .company-logo:hover {
+            transform: scale(1.1);
+        }
+        /* Popup Styles */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .popup-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6B7280;
+            background: none;
+            border: none;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .close-popup:hover {
+            background: #F3F4F6;
+            color: #111827;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Popup HTML -->
+    <div id="popupOverlay" class="popup-overlay">
+        <div class="popup-content">
+            <button id="closePopup" class="close-popup">&times;</button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Welcome to {{ employee.name }}'s Profile!</h2>
+            <p class="text-gray-600 mb-6">Check out the latest updates and connect with {{ employee.name.split(' ')[0] }}.</p>
+            <div class="flex justify-center space-x-4">
+                {% if employee.linkedin %}
+                <a href="{{ employee.linkedin }}" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fab fa-linkedin-in mr-2"></i> Connect
+                </a>
+                {% endif %}
+                {% if employee.phone %}
+                <a href="https://wa.me/{{ employee.phone|replace(' ', '')|replace('+', '')|replace('-', '') }}" 
+                   target="_blank" 
+                   class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    <i class="fab fa-whatsapp mr-2"></i> Message
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="profile-card bg-white">
+            <div class="profile-header">
+                {% if employee.image_url %}
+                <a href="{{ employee.company_url }}" target="_blank" class="inline-block">
+                    <img src="{{ employee.image_url }}" alt="{{ employee.name }}" class="profile-image">
+                </a>
+                {% else %}
+                <div class="profile-image bg-gray-200 flex items-center justify-center text-4xl text-gray-500">
+                    {{ employee.name[0]|upper }}
+                </div>
+                {% endif %}
+                <h1 class="text-2xl font-bold">{{ employee.name }}</h1>
+                <!-- <p class="text-blue-100">{{ employee.designation }}</p> -->
+                <!-- <p class="text-sm text-blue-50 mt-2">{{ employee.position }}</p> -->
+                <p class="text-sm text-blue-50 mt-2">{{ employee.department }}</p>
+                <p class="text-blue-100">{{ employee.position }}</p>
+            </div>
+
+            <!-- <div class="mt-4">
+                {% if employee.company and employee.company|lower == 'yubi' %}
+                    <a href="https://www.yubi.co/" target="_blank" class="inline-block">
+                        <img src="https://www.yubi.co/favicon-32x32.png" 
+                             alt="Yubi Logo" 
+                             class="h-10 w-auto mx-auto"
+                             onerror="this.src='https://via.placeholder.com/150?text=YUBI'">
+                    </a>
+                {% elif employee.company and employee.company|lower == 'spocto' %}
+                    <a href="https://www.spocto.com/" target="_blank" class="inline-block">
+                        <img src="https://www.spocto.com/favicon.ico" 
+                             alt="Spocto Logo" 
+                             class="h-10 w-auto mx-auto"
+                             onerror="this.src='https://via.placeholder.com/150?text=SPOCTO'">
+                    </a>
+                {% else %}
+                    <div class="company-logo text-gray-500 text-sm">Company</div>
+                {% endif %}
+            </div> -->
+
+            <div class="p-6">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Contact Information</h2>
+                    <div class="space-y-2">
+                        {% if employee.email %}
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-envelope w-5 mr-2 text-blue-500"></i>
+                            <a href="mailto:{{ employee.email }}" class="hover:text-blue-500">{{ employee.email }}</a>
+                        </div>
+                        {% endif %}
+                        {% if employee.phone %}
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-phone-alt w-5 mr-3 text-blue-500"></i>
+                            <span>{{ employee.phone }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="mt-4">
+                            <button onclick="showBookingModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                                <i class="far fa-calendar-alt mr-2"></i> Book a Meeting
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {% if employee.linkedin or employee.company_linkedin %}
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Connect</h2>
+                    <div class="social-links flex justify-center">
+                        {% if employee.linkedin %}
+                        <a href="{{ employee.linkedin }}" target="_blank" title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        {% endif %}
+                        {% if employee.company_linkedin %}
+                        <a href="{{ employee.company_linkedin }}" target="_blank" title="Company LinkedIn">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        {% endif %}
+
+
+                        {% if employee.phone %}
+                            <a href="https://wa.me/{{ employee.phone|replace(' ', '')|replace('+', '')|replace('-', '') }}" 
+                            target="_blank" 
+                            title="Contact on WhatsApp" 
+                            class="social-icon text-green-600 hover:text-green-700">
+                                <i class="fab fa-whatsapp text-2xl"></i>
+                            </a>
+                        {% endif %}
+
+                        {% if employee.email %}
+                            <a href="mailto:{{ employee.email }}?subject=Contact from Employee Profile" 
+                            title="Send Email" 
+                            class="social-icon text-red-500 hover:text-red-600">
+                                <i class="fas fa-envelope text-2xl"></i>
+                            </a>
+                        {% endif %}
+
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if employee.bio %}
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2">About</h2>
+                    <p class="text-gray-600">{{ employee.bio }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="popup-overlay" style="display: none;">
+        <div class="popup-content" style="max-width: 800px;">
+            <button onclick="closeBookingModal()" class="close-popup">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Schedule a Meeting with {{ employee.name.split(' ')[0] }}</h2>
+            <div class="mb-4">
+                <p class="text-gray-600">Select an available time slot from the calendar below:</p>
+            </div>
+            <div class="w-full h-[600px] bg-gray-100 rounded-lg overflow-hidden">
+                <!-- Google Calendar Embed -->
+                <iframe 
+                    id="calendarEmbed"
+                    src="" 
+                    style="border: 0;" 
+                    width="100%" 
+                    height="100%" 
+                    frameborder="0"
+                    scrolling="no"
+                    loading="lazy">
+                </iframe>
+            </div>
+            <div class="mt-4 text-sm text-gray-500">
+                <p>Powered by Google Calendar</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const popupOverlay = document.getElementById('popupOverlay');
+            const closePopup = document.getElementById('closePopup');
+            
+            // Function to show popup
+            function showPopup() {
+                // Check if popup was already shown in this session
+                if (!sessionStorage.getItem('popupShown')) {
+                    popupOverlay.style.display = 'flex';
+                    // Set a session flag
+                    sessionStorage.setItem('popupShown', 'true');
+                    
+                    // Auto-close after 10 seconds
+                    setTimeout(() => {
+                        if (popupOverlay.style.display === 'flex') {
+                            popupOverlay.style.display = 'none';
+                        }
+                    }, 10000);
+                }
+            }
+
+            // Close popup
+            function closePopupHandler() {
+                popupOverlay.style.display = 'none';
+            }
+
+            // Event listeners
+            if (closePopup) {
+                closePopup.addEventListener('click', closePopupHandler);
+            }
+
+            // Close when clicking outside the popup content
+            popupOverlay.addEventListener('click', function(e) {
+                if (e.target === popupOverlay) {
+                    closePopupHandler();
+                }
+            });
+
+            // Show popup after a short delay
+            setTimeout(showPopup, 1000);
+        });
+
+        // Add booking modal functions
+        function showBookingModal() {
+            const modal = document.getElementById('bookingModal');
+            const calendarEmbed = document.getElementById('calendarEmbed');
+            
+            // Replace with the employee's Google Calendar embed URL
+            // In a real implementation, this would be dynamic based on the employee's calendar settings
+            // calendarEmbed.src = "https://calendar.google.com/calendar/appointments/schedules/AcZssZ1Rj3r2F5rK8X5Z8Q?gv=90";
+            // calendarEmbed.src = "https://calendar.app.google/LXq7f91oPxGT2UyY9";
+            // calendarEmbed.src ="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ0RccAZAB_f_w5Wn0YABTiC6-llHcxG8eZDb-497-BLQZQYXD8K_opj8Xy3ufZ3OkdfOKWIzE3c";
+            const calendarUrl = "{{ employee.calendar_url }}" || "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ0RccAZAB_f_w5Wn0YABTiC6-llHcxG8eZDb-497-BLQZQYXD8K_opj8Xy3ufZ3OkdfOKWIzE3c";
+
+            if (calendarUrl) {
+                calendarEmbed.src = calendarUrl;
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                alert('No calendar URL available for this employee.');
+            }
+            
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBookingModal() {
+            const modal = document.getElementById('bookingModal');
+            const calendarEmbed = document.getElementById('calendarEmbed');
+            
+            // Pause the iframe when closing
+            calendarEmbed.src = '';
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside the content
+        window.onclick = function(event) {
+            const modal = document.getElementById('bookingModal');
+            if (event.target === modal) {
+                closeBookingModal();
+            }
+        }
+    </script>
+</body>
+</html>

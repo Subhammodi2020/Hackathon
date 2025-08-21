@@ -1,0 +1,149 @@
+<!-- templates/scan_landing.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loading Employee Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .ad-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .ad-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading employee profile...</p>
+    </div>
+
+    <!-- Single Ad Popup -->
+    <div id="adModal" class="ad-overlay">
+        <div class="ad-content">
+            <button class="close-btn" id="closeModal">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Special Offer!</h2>
+            <p class="mb-4">Check out our latest products and services.</p>
+            <a href="/special-offer" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Learn More
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('adModal');
+            const closeBtn = document.getElementById('closeModal');
+            
+            // Function to show the popup
+            function showAdPopup() {
+                if (modal) {
+                    modal.style.display = 'flex';
+                    // Auto-close after 10 seconds
+                    setTimeout(() => {
+                        if (modal.style.display === 'flex') {
+                            modal.style.display = 'none';
+                            // Redirect after hiding the ad
+                            redirectToProfile();
+                        }
+                    }, 10000);
+                }
+            }
+
+            // Function to redirect to profile
+            function redirectToProfile() {
+                const pathParts = window.location.pathname.split('/');
+                const employeeId = pathParts[pathParts.length - 1];
+                if (employeeId) {
+                    window.location.href = `/employee/${employeeId}/profile`;
+                } else {
+                    window.location.href = '/';
+                }
+            }
+
+            // Close button functionality
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    redirectToProfile();
+                });
+            }
+
+            // Close when clicking outside the content
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        redirectToProfile();
+                    }
+                });
+            }
+
+            // Extract employee ID from URL
+            const pathParts = window.location.pathname.split('/');
+            const employeeId = pathParts[pathParts.length - 1];
+            
+            // Show the popup after a short delay to ensure DOM is ready
+            setTimeout(showAdPopup, 500);
+            
+            // Also show popup when employee data is loaded (as a fallback)
+            if (employeeId && employeeId !== 'scanning') {
+                fetch(`/api/employee/${employeeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        // The popup is already shown, no need to show it again
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.body.innerHTML = `
+                            <div class="bg-white p-8 rounded-lg shadow-md max-w-md mx-auto mt-20 text-center">
+                                <h1 class="text-2xl font-bold text-red-500 mb-4">Error</h1>
+                                <p class="text-gray-600">${error.message || 'Failed to load employee data. Please try again.'}</p>
+                                <a href="/" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Go Back</a>
+                            </div>
+                        `;
+                    });
+            } else {
+                // If no employee ID, just show the popup
+                showAdPopup();
+            }
+        });
+    </script>
+</body>
+</html>
