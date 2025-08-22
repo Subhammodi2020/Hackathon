@@ -194,8 +194,13 @@
                     <h2 class="text-xl font-bold text-gray-800 mb-4">Connect</h2>
                     <div class="social-links flex justify-center">
                         {% if employee.linkedin %}
-                        <a href="{{ employee.linkedin }}" target="_blank" title="LinkedIn">
-                            <i class="fab fa-linkedin-in"></i>
+                        <a href="{{ employee.linkedin }}" target="_blank" title="LinkedIn" class="social-icon text-blue-700 hover:text-blue-800 mr-4">
+                            <i class="fab fa-linkedin-in text-2xl"></i>
+                        </a>
+                        {% endif %}
+                        {% if employee.company_linkedin %}
+                        <a href="{{ employee.company_linkedin }}" target="_blank" title="Company LinkedIn" class="social-icon text-gray-700 hover:text-gray-800 mr-4">
+                            <i class="fas fa-building text-2xl"></i>
                         </a>
                         {% endif %}
 

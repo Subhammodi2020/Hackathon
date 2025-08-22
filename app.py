@@ -501,7 +501,6 @@ def get_qr_code(employee_id):
 #                     'email': employee_data.get('email', ''),
 #                     'phone': employee_data.get('phone', ''),
 #                     'linkedin': employee_data.get('linkedin', ''),
-#                     'company_linkedin': employee_data.get('company_linkedin', ''),
 #                     'bio': employee_data.get('bio', ''),
 #                     'image_url': employee_data.get('image_url', '')
 #                 }
