@@ -123,7 +123,7 @@ employees = {}
 #         print(f"Error loading employees: {str(e)}")
 #         return False
 
-def send_email(recipient_email, employee_name, qr_image_data, employee_id):
+def send_email(recipient_email, employee_name, employee_id, attachment_data=None, attachment_filename=None):
     try:
         # Create message container
         msg = MIMEMultipart('related')
@@ -136,8 +136,7 @@ def send_email(recipient_email, employee_name, qr_image_data, employee_id):
         <html>
           <body>
             <p>Dear {employee_name},</p>
-            <p>Please find your employee QR code attached. This QR code contains your employee ID: <strong>{employee_id}</strong>.</p>
-            <p>You can use this QR code for attendance and other company services.</p>
+            <p>Please find your business card attached. This contains your details and a QR code for easy access to your profile.</p>
             <p>Best regards,<br>Your Company</p>
           </body>
         </html>
@@ -146,11 +145,11 @@ def send_email(recipient_email, employee_name, qr_image_data, employee_id):
         # Attach HTML content
         msg.attach(MIMEText(html, 'html'))
         
-        # Attach QR code image
-        qr_image = MIMEImage(qr_image_data)
-        qr_image.add_header('Content-ID', '<qrcode>')
-        qr_image.add_header('Content-Disposition', 'attachment', filename=f'qrcode_{employee_id}.png')
-        msg.attach(qr_image)
+        # Attach business card image if provided
+        if attachment_data and attachment_filename:
+            attachment = MIMEImage(attachment_data, name=attachment_filename)
+            attachment.add_header('Content-Disposition', 'attachment', filename=attachment_filename)
+            msg.attach(attachment)
         
         # Connect to SMTP server and send email
         with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
@@ -212,13 +211,17 @@ def load_employees():
                     qr_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
                     qr_image_data = img_io.getvalue()
 
-                    # Send email with QR code
-                    send_email(
-                        recipient_email=employee_data['email'],
-                        employee_name=employee_data.get('name', 'Employee'),
-                        qr_image_data=qr_image_data,
-                        employee_id=employee_id
-                    )
+                    # Create the business card image to be sent via email
+                    business_card_buf, business_card_filename = _create_business_card_image(employee_id)
+
+                    if business_card_buf and business_card_filename:
+                        send_email(
+                            recipient_email=employee_data['email'],
+                            employee_name=employee_data.get('name', 'Employee'),
+                            employee_id=employee_id,
+                            attachment_data=business_card_buf.getvalue(),
+                            attachment_filename=business_card_filename
+                        )
                     
                     # Save to Excel
                     # qr_col_idx = headers.index('qr_code') + 1  # +1 for 1-based index
@@ -643,6 +646,42 @@ def generate_business_card(employee_id):
     except Exception as e:
         app.logger.error(f"Error in generate_business_card route for {employee_id}: {e}", exc_info=True)
         return str(e), 500
+
+@app.route('/api/employee', methods=['POST'])
+def add_employee():
+    """Adds a new employee to the Excel file and triggers processing."""
+    try:
+        data = request.get_json()
+        if not data or 'employee id' not in data or 'name' not in data:
+            return jsonify({'error': 'Missing required employee data (employee id, name)'}), 400
+
+        employee_id = str(data['employee id'])
+
+        wb = load_workbook(filename=app.config['EXCEL_FILE'])
+        ws = wb.active
+
+        # Check if employee ID already exists
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row and str(row[0]) == employee_id:
+                return jsonify({'error': f'Employee with ID {employee_id} already exists'}), 409
+
+        headers = [str(cell.value).lower() if cell.value else '' for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+        
+        # Append new employee data
+        new_row = [data.get(h, None) for h in headers]
+        ws.append(new_row)
+        wb.save(app.config['EXCEL_FILE'])
+
+        # Reload employees to process the new entry
+        if load_employees():
+            return jsonify({'status': 'success', 'message': f'Employee {employee_id} added successfully'}), 201
+        else:
+            # This case might occur if the file is saved but processing fails
+            return jsonify({'error': 'Employee added but failed to process (e.g., send email)'}), 500
+
+    except Exception as e:
+        app.logger.error(f"Error adding employee: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     # Create uploads directory if it doesn't exist
